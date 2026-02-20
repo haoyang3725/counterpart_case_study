@@ -2,6 +2,13 @@ import pandas as pd
 import numpy as np
 import os
 
+# This function takes in a JSON input with the following fields:
+# 	Asset Size: integer between 1 and 250,000,000
+# 	Limit: integer greater than 0
+# 	Retention: integer greater than or equal to 0
+# 	Industry: one of "Hazard Group 1", "Hazard Group 2", "Hazard Group 3"
+# It validates the input, retrieves the necessary data from CSV files, 
+# Calculates the insurance premium based on the given formula.
 def execute(json_input):
 	_validate_input(json_input)
 
@@ -16,9 +23,11 @@ def execute(json_input):
 	retention_factor = _get_limit_retention_factor(retention, limits, limit_factors)
 	limit_factor = _get_limit_retention_factor(limit + retention, limits, limit_factors)
 	industry_factor = _get_industry_factor(industry, industry_factor_dict)
-	
-	return int(base_rate * (limit_factor - retention_factor) * industry_factor * 1.7)
+	premium = int(base_rate * (limit_factor - retention_factor) * industry_factor * 1.7) 
 
+	return premium
+
+# This function validates the input JSON to ensure all required fields are present and have valid values.
 def _validate_input(json_input):
 	required_keys = ['Asset Size', 'Limit', 'Retention', 'Industry']
 	valid_industries = ['Hazard Group 1', 'Hazard Group 2', 'Hazard Group 3']
@@ -43,7 +52,7 @@ def _validate_input(json_input):
 	if industry not in valid_industries:
 		raise ValueError(f"Industry must be one of {valid_industries}")
 
-
+# This function reads the necessary data from CSV files and returns them as numpy arrays and dictionaries for use in premium calculations.
 def _get_data():
 	current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -98,5 +107,6 @@ def _get_limit_retention_factor(limit, limits, limit_factors):
 
 	return factor
 
+# based on the preset industry factor dictionary, retrieve the factor for the given industry input
 def _get_industry_factor(group, industry_factor_dict):
 	return industry_factor_dict[group]
